@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"sort"
@@ -100,6 +101,8 @@ type Simulator struct {
 	StartTime     string        // Set a custom start time.
 	TimeSpan      time.Duration // The length of time to span writes over.
 	Delay         time.Duration // A delay inserted in between writes.
+	Rand          *rand.Rand
+
 }
 
 // NewSimulator returns a new instance of Simulator.
@@ -128,6 +131,7 @@ func NewSimulator() *Simulator {
 		BatchSize:       5000,
 		Database:        "db",
 		ShardDuration:   "7d",
+		Rand:            rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
 
@@ -336,7 +340,7 @@ func (s *Simulator) generateBatches() <-chan []byte {
 			// First field doesn't have a number incremented.
 			pair := fmt.Sprintf("%s=1%s", s.FieldPrefix, delim)
 			if i > 0 {
-				pair = fmt.Sprintf("%s%d=1%s", s.FieldPrefix, i, delim)
+				pair = fmt.Sprintf("%s%d=%d%s", s.FieldPrefix, i, s.Rand.Int31(), delim)
 			}
 			fields = append(fields, []byte(pair)...)
 		}
